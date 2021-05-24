@@ -1,3 +1,6 @@
+
+import numpy as np
+
 from os import mkdir, listdir
 from os.path import isdir as folder_exists
 from os.path import isfile, splitext
