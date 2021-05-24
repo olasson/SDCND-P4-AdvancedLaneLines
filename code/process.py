@@ -170,3 +170,36 @@ def pre_process_image(image, mtx, dist, src, dst, n_rows, n_cols, debug_path = N
         save_image(debug_path, 'step07_dst.png', draw_region(image_warped, dst))
 
     return image_undistorted, gray_warped
+
+
+def pre_process_frames(path, mtx, dist, src, dst, n_rows, n_cols, video_codec = '.mp4'):
+
+    cap = cv2.VideoCapture(path)
+
+    n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    frames = np.zeros((n_frames, n_rows, n_cols), dtype = 'uint8')
+
+    fourcc = cv2.VideoWriter_fourcc(*video_codec)
+    
+    i = 0
+
+    while(cap.isOpened()):
+
+        ret, frame = cap.read()
+
+        if ret:
+
+            image_undistorted, gray_warped = pre_process_image(frame, mtx, dist, src, dst, n_rows, n_cols)
+
+            frames[i] = gray_warped
+
+            i = i + 1
+            if i % 50 == 0:
+                print('INFO:pre_process_frames(): Processed frame ' + str(i) + '/' + str(n_frames))
+        else:
+            break
+
+    cap.release()
+
+    return frames
