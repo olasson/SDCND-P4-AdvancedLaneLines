@@ -1,10 +1,12 @@
 import argparse
 
 from shutil import rmtree
+from os.path import join as path_join
 
 from code.misc import file_exists, folder_guard, folder_is_empty, remove_ext
 from code.io import load_images
 from code.plots import plot_images
+from code.calibration import camera_calibrate, save_calibration_data, load_calibration_data
 
 INFO_PREFIX = 'INFO:main(): '
 WARNING_PREFIX = 'WARNING:main(): '
@@ -97,9 +99,15 @@ def main():
 
     path_show_images = args.show_images
 
+    path_cam_calibrate_load = './images/calibration'
+    path_cam_calibrate_save = path_join(FOLDER_DATA, 'calibrated.p')
+    path_cam_calibrate_debug = path_join(FOLDER_DATA, 'debug_calibrate')
+
     # Init flags
 
     flag_show_images = (path_show_images != '')
+
+    flag_cam_is_calibrated = file_exists(path_cam_calibrate_save)
 
     flag_debug = args.debug
     flag_clean = args.clean
@@ -114,6 +122,7 @@ def main():
     # Setup
 
     folder_guard(FOLDER_DATA)
+    folder_guard(path_cam_calibrate_debug)
 
     if flag_clean:
         print(INFO_PREFIX + 'Deleting ' + FOLDER_DATA + ' and all its contents!')
@@ -121,6 +130,23 @@ def main():
         print(INFO_PREFIX + 'Stopping program here! Remove the --clean flag to continue!')
         return
 
+    # Calibrate
+
+    if not flag_cam_is_calibrated:
+        print(INFO_PREFIX + 'Calibrating camera!')
+
+        debug_path = None
+        if flag_debug:
+            debug_path = path_cam_calibrate_debug
+
+        ret, mtx, dist = camera_calibrate(path_cam_calibrate_load, debug_path = debug_path)
+
+        if not ret:
+            print(ERROR_PREFIX + 'Camera calibration failed!')
+            return
+
+        save_calibration_data(path_cam_calibrate_save, mtx, dist)
+        print(INFO_PREFIX + 'Calibration data saved in location: ' + path_cam_calibrate_save)
 
 
     # Show
