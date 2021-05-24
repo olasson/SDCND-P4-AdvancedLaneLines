@@ -1,15 +1,16 @@
 import argparse
 
 import cv2
+import numpy as np
 
 from shutil import rmtree
 from os.path import join as path_join
 
-from code.misc import file_exists, folder_guard, folder_is_empty, remove_ext, compute_src_and_dst
-from code.io import load_images
+from code.misc import file_exists, folder_guard, folder_is_empty, remove_ext, get_file_name_base, compute_src_and_dst
+from code.io import load_images, save_frame_data, load_frame_data
 from code.plots import plot_images
 from code.calibration import camera_calibrate, save_calibration_data, load_calibration_data
-from code.process import pre_process_image
+from code.process import pre_process_image, pre_process_frames
 
 INFO_PREFIX = 'INFO:main(): '
 WARNING_PREFIX = 'WARNING:main(): '
@@ -104,6 +105,7 @@ def main():
 
     path_pipeline_video_input = args.video
     path_pipeline_video_output = path_join(FOLDER_DATA, 'output_video.mp4')
+    path_pipeline_processed_frames = path_join(FOLDER_DATA, get_file_name_base(path_pipeline_video_input) + '.p')
 
     path_pipeline_images = args.images
     path_pipeline_debug = path_join(FOLDER_DATA, 'debug_pipeline')
@@ -117,6 +119,8 @@ def main():
     flag_run_pipeline_on_images = (path_pipeline_images != '')
 
     flag_run_pipeline_on_videos = (path_pipeline_video_input != '')
+
+    flag_processed_frames_exists = file_exists(path_pipeline_processed_frames)
 
     flag_show_images = (path_show_images != '')
 
@@ -163,13 +167,12 @@ def main():
 
         save_calibration_data(path_cam_calibrate_save, mtx, dist)
         print(INFO_PREFIX + 'Calibration data saved in location: ' + path_cam_calibrate_save)
+    else:
+        print(INFO_PREFIX + 'Loading calibration data!')
+        mtx, dist = load_calibration_data(path_cam_calibrate_save)
 
     if flag_run_pipeline_on_images:
         print(INFO_PREFIX + 'Running pipeline on images!')
-
-        if flag_cam_is_calibrated:
-            print(INFO_PREFIX + 'Loading calibration data!')
-            mtx, dist = load_calibration_data(path_cam_calibrate_save)
 
         src, dst = compute_src_and_dst(n_rows, n_cols)
 
@@ -186,6 +189,30 @@ def main():
 
             image_undistorted, gray_warped = pre_process_image(images[i], mtx, dist, src, dst, n_rows, n_cols, debug_path = debug_path)
 
+    
+    if flag_run_pipeline_on_videos and flag_debug:
+
+        if not flag_processed_frames_exists:
+            print(INFO_PREFIX + 'Pre processing video frames for: ' + path_pipeline_video_input)
+
+            src, dst = compute_src_and_dst(n_rows, n_cols)
+
+            frames = pre_process_frames(path_pipeline_video_input, mtx, dist, src, dst, n_rows, n_cols, args.video_codec)
+
+            save_frame_data(path_pipeline_processed_frames, frames)
+        else:
+            print(INFO_PREFIX + 'Loading pre processed frames from: '+ path_pipeline_video_input)
+            frames = load_frame_data(path_pipeline_processed_frames)
+
+
+    # Show
+
+    if flag_show_images:
+        print(INFO_PREFIX + 'Showing images from folder: ' + path_show_images)
+        images, file_names = load_images(path_show_images)
+        plot_images(images, file_names, n_max_cols = n_max_cols)
+
+"""
     if flag_run_pipeline_on_videos:
         print(INFO_PREFIX + 'Running pipeline on video!')
 
@@ -199,6 +226,8 @@ def main():
 
         n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
+        if flag_debug:
+            frames = np.array((n_frames, n_rows, n_cols, 1), dtype = 'uint8')
 
         fourcc = cv2.VideoWriter_fourcc(*args.video_codec)
         out = cv2.VideoWriter(path_pipeline_video_output, fourcc, fps, tuple(args.frame_size))
@@ -212,9 +241,14 @@ def main():
             if ret:
                 i = i + 1
                 if i % 50 == 0:
-                    print(i)
+                    print(INFO_PREFIX + 'Frame ' + str(i) '/' + str(n_frames))
 
                 image_undistorted, gray_warped = pre_process_image(frame, mtx, dist, src, dst, n_rows, n_cols)
+
+                if flag_debug:
+                    frames[i] = gray_warped
+
+                break
                 
                 #out.write(lane_image)
             else:
@@ -224,16 +258,14 @@ def main():
         cap.release()
         out.release()
 
+        if flag_debug:
+            print(INFO_PREFIX + 'Saving frames!')
+
         print('Done processing video!')
         print('Number of frames successfully processed: ', i)
         print('Result is found here: ', path_pipeline_video_output)
+"""
 
 
-    # Show
-
-    if flag_show_images:
-        print(INFO_PREFIX + 'Showing images from folder: ' + path_show_images)
-        images, file_names = load_images(path_show_images)
-        plot_images(images, file_names, n_max_cols = n_max_cols)
 
 main()
