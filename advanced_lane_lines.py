@@ -131,6 +131,9 @@ def main():
 
     # Init values
 
+    mtx = None
+    dist = None
+
     fps = args.fps
 
     n_rows = args.frame_size[1]
@@ -149,6 +152,13 @@ def main():
         rmtree(FOLDER_DATA)
         print(INFO_PREFIX + 'Stopping program here! Remove the --clean flag to continue!')
         return
+
+    # Checks
+
+    if flag_show_images and folder_is_empty(path_show_images):
+        print(ERROR_PREFIX + '--show_images: The folder: ' + path_show_images + ' is empty!')
+        return
+
 
     # Calibrate
 
@@ -171,6 +181,11 @@ def main():
         print(INFO_PREFIX + 'Loading calibration data!')
         mtx, dist = load_calibration_data(path_cam_calibrate_save)
 
+    # The result at this point should be that mtx and dist is loaded and ready for use
+    if (mtx is None) or (dist is None):
+        print(ERROR_PREFIX + 'Camera calibration data is still not loaded properly!')
+        return
+
     if flag_run_pipeline_on_images:
         print(INFO_PREFIX + 'Running pipeline on images!')
 
@@ -189,7 +204,7 @@ def main():
 
             image_undistorted, gray_warped = pre_process_image(images[i], mtx, dist, src, dst, n_rows, n_cols, debug_path = debug_path)
 
-    
+
     if flag_run_pipeline_on_videos and flag_debug:
 
         if not flag_processed_frames_exists:
@@ -203,6 +218,14 @@ def main():
         else:
             print(INFO_PREFIX + 'Loading pre processed frames from: '+ path_pipeline_video_input)
             frames = load_frame_data(path_pipeline_processed_frames)
+
+        n_frames = len(frames)
+
+        for i in range(n_frames):
+
+            if i % 50 == 0:
+                print(INFO_PREFIX + 'Processed frame ' +  str(i) + '/' + str(n_frames))
+
 
 
     # Show
