@@ -1,5 +1,7 @@
 import cv2
 
+import pickle
+
 import numpy as np
 
 from os import listdir
@@ -22,3 +24,20 @@ def load_images(path):
 
 def save_image(path, file_name, image):
     cv2.imwrite(path_join(path, file_name), image)
+
+
+def save_frame_data(path, frames):
+
+    data = {'frames': frames} 
+
+    with open(path, mode = 'wb') as f:   
+        pickle.dump(data, f, protocol = pickle.HIGHEST_PROTOCOL)
+
+def load_frame_data(path):
+
+    with open(path, mode = 'rb') as f:
+        data = pickle.load(f)
+
+    frames = data['frames']
+
+    return frames
