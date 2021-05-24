@@ -3,7 +3,7 @@ import numpy as np
 
 from os import mkdir, listdir
 from os.path import isdir as folder_exists
-from os.path import isfile, splitext
+from os.path import isfile, splitext, basename
 
 def file_exists(path):
 
@@ -32,6 +32,16 @@ def remove_ext(file_name):
     base_name = splitext(file_name)[0]
 
     return base_name
+
+def get_file_name_base(path):
+
+    file_name = basename(path)
+
+    file_name_base = remove_ext(file_name)
+
+    return file_name_base
+
+
 
 def compute_src_and_dst(n_rows, n_cols):
 
