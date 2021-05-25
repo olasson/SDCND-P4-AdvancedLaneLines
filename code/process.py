@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from code.draw import draw_region
+from code.draw import draw_region, draw_lanes
 from code.io import save_image
 
 SOBEL_KERNEL = 5
@@ -203,3 +203,18 @@ def pre_process_frames(path, mtx, dist, src, dst, n_rows, n_cols, video_codec = 
     cap.release()
 
     return frames
+
+
+def post_process_image(image_undistorted, left_fit, right_fit, src, dst, n_rows, n_cols, debug_path = None):
+
+    image_tmp = draw_lanes(image_undistorted, n_rows, left_fit, right_fit, marker_width = 20, fill_color = (0, 255, 0))
+
+    image_tmp = unwarp_image(image_tmp, src, dst, n_rows, n_cols)
+
+    lane_image = cv2.addWeighted(image_undistorted, 1.0, image_tmp, 1.0, 0.0)
+
+    if debug_path is not None:
+
+        save_image(debug_path, 'step08_lane_image.png', lane_image)
+
+    return lane_image
