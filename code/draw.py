@@ -22,3 +22,26 @@ def draw_region(image, points):
     draw_line(image_out, line_4)
 
     return image_out
+
+def draw_lanes(image, n_rows, left_fit, right_fit, marker_width = 20, fill_color = (0, 255, 0)):
+
+    y_vals = range(0, n_rows)
+
+    left_x_vals = left_fit[0] * y_vals * y_vals + left_fit[1] * y_vals + left_fit[2]
+    right_x_vals = right_fit[0] * y_vals * y_vals + right_fit[1] * y_vals + right_fit[2]
+
+    image_out = np.zeros_like(image)
+
+    cv2.polylines(image_out, np.int_([list(zip(left_x_vals, y_vals))]), False, (255, 0, 0), marker_width)
+    cv2.polylines(image_out, np.int_([list(zip(right_x_vals, y_vals))]), False, (0, 0, 255), marker_width)
+
+    if fill_color is not None:
+
+        offset = marker_width / 2
+
+        inner_x = np.concatenate((left_x_vals + offset, right_x_vals[::-1] - offset), axis = 0)
+        inner_y = np.concatenate((y_vals, y_vals[::-1]), axis = 0)
+
+        cv2.fillPoly(image_out, np.int_([list(zip(inner_x, inner_y))]), color = fill_color)
+
+    return image_out
