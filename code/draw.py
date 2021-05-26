@@ -45,3 +45,13 @@ def draw_lanes(image, n_rows, left_fit, right_fit, marker_width = 20, fill_color
         cv2.fillPoly(image_out, np.int_([list(zip(inner_x, inner_y))]), color = fill_color)
 
     return image_out
+
+def draw_text(image, curvature, deviation, font_color = (0, 255, 0)):
+
+    curvature_str1 = 'Left Curvature: ' + str(round(curvature[0], 3)) 
+    curvature_str2 = 'Right Curvature: ' + str(round(curvature[1], 3))
+    deviation_str = 'Center deviation: ' + str(round(deviation, 3))
+
+    cv2.putText(image, curvature_str1, (30, 60), cv2.FONT_HERSHEY_DUPLEX, 1, font_color, 2)
+    cv2.putText(image, curvature_str2, (30, 90), cv2.FONT_HERSHEY_DUPLEX, 1, font_color, 2)
+    cv2.putText(image, deviation_str, (30, 120), cv2.FONT_HERSHEY_DUPLEX, 1, font_color, 2)
