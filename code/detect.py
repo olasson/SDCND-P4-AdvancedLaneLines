@@ -2,28 +2,30 @@ import numpy as np
 import cv2
 from collections import deque
 
-from code.draw import draw_lanes, draw_text
+from code.io import save_image
 
+from code._draw import _draw_region, _draw_lanes, _draw_text
 
 from code._centroids import (_fit_lanes, _estimate_first_centroid, _estimate_centroids, _compute_curvature, _compute_deviation, 
                              _infer_lane_error_code, _compute_mean_distance)
+from code._centroids import WINDOW_WIDTH, WINDOW_HEIGHT, IMAGE_MAX
 
 from code._process import _threshold_gradient, _threshold_color, _warp_image, _unwarp_image, _compute_src_and_dst
 
-from code._config import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_MARGIN, IMAGE_MAX
-
-
 M_PER_PIXELS_X = 3.7/700
 M_PER_PIXELS_Y = 3/110
-
 
 class LaneDetector:
 
 
     def __init__(self, n_rows, n_cols, mtx, dist, buffer_size = 15):
 
+        # Lane detector internal states
+
         self.centroids_buffer = deque(maxlen = buffer_size)
         self.last_lanes_distance = None
+
+        # Constant values
 
         self.n_rows = n_rows
         self.n_cols = n_cols
@@ -35,15 +37,13 @@ class LaneDetector:
         self.src = src
         self.dst = dst
 
-    def detect(self, image):
+    def detect(self, image, debug_path = None):
 
         #--------------------------
         # Part 1: Pre-process image
         #--------------------------
 
         image_undistorted = cv2.undistort(image, self.mtx, self.dist, None, self.mtx)
-
-        #image_gamma = gamma_correction(image_undistorted, 4.0)
 
         gradient_binary = _threshold_gradient(image_undistorted)
         color_binary = _threshold_color(image_undistorted)
@@ -103,13 +103,27 @@ class LaneDetector:
         # Part 3: Post-processing
         #--------------------------
 
-        image_tmp = draw_lanes(image_undistorted, self.n_rows, left_fit, right_fit, marker_width = 20, fill_color = (0, 255, 0))
+        image_tmp = _draw_lanes(image_undistorted, self.n_rows, left_fit, right_fit, marker_width = 20, fill_color = (0, 255, 0))
 
         image_tmp = _unwarp_image(image_tmp, self.src, self.dst, self.n_rows, self.n_cols)
 
         lane_image = cv2.addWeighted(image_undistorted, 1.0, image_tmp, 1.0, 0.0)
 
-        draw_text(lane_image, curvature, deviation)
+        _draw_text(lane_image, curvature, deviation)
+
+
+        if debug_path is not None:
+
+            # Create a warped RGB image for src and dst
+            image_warped = _warp_image(image, self.src, self.dst, self.n_rows, self.n_cols)
+
+            save_image(debug_path, 'step01_image_undistorted.png', image_undistorted)
+            save_image(debug_path, 'step03_gradient_binary.png', gradient_binary * IMAGE_MAX)
+            save_image(debug_path, 'step04_color_binary.png', color_binary * IMAGE_MAX)
+            save_image(debug_path, 'step05_combined_threshold.png', combined_threshold)
+            save_image(debug_path, 'step06_src.png', _draw_region(image, self.src))
+            save_image(debug_path, 'step07_dst.png', _draw_region(image_warped, self.dst))
+            save_image(debug_path, 'step08_lane_image.png', lane_image)
 
 
         return lane_image

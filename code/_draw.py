@@ -1,12 +1,12 @@
 import cv2
 import numpy as np
 
-def draw_line(image, line, color = [255, 0, 0], thickness = 10):
+def _draw_line(image, line, color = [255, 0, 0], thickness = 10):
 
     cv2.line(image, (int(line[0]), int(line[1])),
                     (int(line[2]), int(line[3])), color = color, thickness = thickness)
 
-def draw_region(image, points):
+def _draw_region(image, points):
 
     line_1 = np.array([points[0][0], points[0][1], points[2][0], points[2][1]]) # Top left to bottom left
     line_2 = np.array([points[1][0], points[1][1], points[3][0], points[3][1]]) # Top right to bottom right
@@ -16,14 +16,14 @@ def draw_region(image, points):
 
     image_out = np.copy(image)
 
-    draw_line(image_out, line_1)
-    draw_line(image_out, line_2)
-    draw_line(image_out, line_3)
-    draw_line(image_out, line_4)
+    _draw_line(image_out, line_1)
+    _draw_line(image_out, line_2)
+    _draw_line(image_out, line_3)
+    _draw_line(image_out, line_4)
 
     return image_out
 
-def draw_lanes(image, n_rows, left_fit, right_fit, marker_width = 20, fill_color = (0, 255, 0)):
+def _draw_lanes(image, n_rows, left_fit, right_fit, marker_width = 20, fill_color = (0, 255, 0)):
 
     y_vals = range(0, n_rows)
 
@@ -46,7 +46,7 @@ def draw_lanes(image, n_rows, left_fit, right_fit, marker_width = 20, fill_color
 
     return image_out
 
-def draw_text(image, curvature, deviation, font_color = (0, 255, 0)):
+def _draw_text(image, curvature, deviation, font_color = (0, 255, 0)):
 
     curvature_str1 = 'Left Curvature: ' + str(round(curvature[0], 3)) 
     curvature_str2 = 'Right Curvature: ' + str(round(curvature[1], 3))

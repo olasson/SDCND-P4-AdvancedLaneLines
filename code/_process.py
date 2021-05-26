@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 
 #from code.draw import draw_region, draw_lanes, draw_text
-from code.io import save_image
+#from code.io import save_image
 
-from code._config import IMAGE_MAX
+IMAGE_MAX = 255
 
 SOBEL_KERNEL = 5
 #IMAGE_MAX = 255
@@ -117,17 +117,7 @@ def _threshold_color(image):
     color_binary[((b_channel_binary == 1) & (v_channel_binary == 1)) | ((r_channel_binary == 1) & (l_channel_binary == 1)) | ((s_channel_binary == 1) & (v_channel_binary == 1))] = 1
 
     return color_binary
-"""
-def gamma_correction(image, gamma):
 
-    table = np.zeros(256)
-    for i in np.arange(0, 256):
-        table[i] = ((i / 255.0) ** gamma) * 255.0
-
-    gamma_image = cv2.LUT(image, table.astype('uint8'))
-
-    return gamma_image
-"""
 
 def _warp_image(image, src, dst, n_rows, n_cols):
 

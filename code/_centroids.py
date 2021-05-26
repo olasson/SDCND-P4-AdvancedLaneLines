@@ -2,10 +2,13 @@ import numpy as np
 import cv2
 from collections import deque
 
-from code._config import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_MARGIN, IMAGE_MAX
+#from code._config import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_MARGIN, IMAGE_MAX
 
+IMAGE_MAX = 255
 
-# Local config
+WINDOW_WIDTH = 30
+WINDOW_HEIGHT = 80
+WINDOW_MARGIN = 35
 
 WINDOW_MAX_SINGAL = WINDOW_WIDTH * WINDOW_HEIGHT * IMAGE_MAX
 

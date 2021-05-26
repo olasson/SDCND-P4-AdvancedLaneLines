@@ -13,7 +13,7 @@ from code.calibration import camera_calibrate, save_calibration_data, load_calib
 #from code.process import pre_process_image, pre_process_frames, post_process_image
 from code.detect import LaneDetector
 
-from code.draw import draw_lanes
+#from code.draw import draw_lanes
 
 INFO_PREFIX = 'INFO:main(): '
 WARNING_PREFIX = 'WARNING:main(): '
@@ -209,12 +209,12 @@ def main():
 
         for i in range(n_images):
 
-            #if flag_debug:
-            #    debug_path = path_join(path_pipeline_debug, remove_ext(file_names[i]))
-            #    folder_guard(debug_path)
+            if flag_debug:
+                debug_path = path_join(path_pipeline_debug, remove_ext(file_names[i]))
+                folder_guard(debug_path)
 
             #image_undistorted, gray_warped = pre_process_image(images[i], mtx, dist, src, dst, n_rows, n_cols, debug_path = debug_path)
-            lane_image = lane_detector.detect(images[i])
+            lane_image = lane_detector.detect(images[i], debug_path = debug_path)
             images_result[i] = lane_image
 
         plot_images(images_result, file_names)
