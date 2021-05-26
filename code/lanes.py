@@ -306,4 +306,4 @@ class LaneDetector:
         deviation = _compute_deviation(left_fit_scaled, right_fit_scaled, self.n_rows * M_PER_PIXELS_Y, self.n_cols * M_PER_PIXELS_X)
 
 
-        return left_fit, right_fit
+        return left_fit, right_fit, curvature, deviation
