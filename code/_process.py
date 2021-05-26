@@ -4,8 +4,10 @@ import numpy as np
 from code.draw import draw_region, draw_lanes, draw_text
 from code.io import save_image
 
+from code._config import IMAGE_MAX
+
 SOBEL_KERNEL = 5
-IMAGE_MAX = 255
+#IMAGE_MAX = 255
 
 # Internals
 
@@ -79,7 +81,7 @@ def _threshold_binary_lab_channel(image, c, thresholds):
 
 # Gradient
 
-def threshold_gradient(image):
+def _threshold_gradient(image):
 
     gray_image  = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     sobel_x = cv2.Sobel(gray_image, cv2.CV_64F, 1, 0, ksize = SOBEL_KERNEL)
@@ -101,7 +103,7 @@ def threshold_gradient(image):
 
 # Color
 
-def threshold_color(image):
+def _threshold_color(image):
 
     r_channel_binary = _threshold_binary(image[:, :, 2], [195, IMAGE_MAX])
     l_channel_binary = _threshold_binary_hls_channel(image, 1, [195, IMAGE_MAX])
@@ -115,7 +117,7 @@ def threshold_color(image):
     color_binary[((b_channel_binary == 1) & (v_channel_binary == 1)) | ((r_channel_binary == 1) & (l_channel_binary == 1)) | ((s_channel_binary == 1) & (v_channel_binary == 1))] = 1
 
     return color_binary
-
+"""
 def gamma_correction(image, gamma):
 
     table = np.zeros(256)
@@ -125,9 +127,9 @@ def gamma_correction(image, gamma):
     gamma_image = cv2.LUT(image, table.astype('uint8'))
 
     return gamma_image
+"""
 
-
-def warp_image(image, src, dst, n_rows, n_cols):
+def _warp_image(image, src, dst, n_rows, n_cols):
 
     warp_matrix = cv2.getPerspectiveTransform(src, dst)
 
@@ -135,13 +137,45 @@ def warp_image(image, src, dst, n_rows, n_cols):
 
     return image_warped
 
-def unwarp_image(image, src, dst, n_rows, n_cols):
+def _unwarp_image(image, src, dst, n_rows, n_cols):
 
-    unwarped_image = warp_image(image, dst, src, n_rows, n_cols)
+    unwarped_image = _warp_image(image, dst, src, n_rows, n_cols)
 
     return unwarped_image
 
+def _compute_src_and_dst(n_rows, n_cols):
 
+    # Compute src
+
+    # Pre-computed values from the line: [570, 470, 220, 720]
+    left_slope = -0.7142857143 
+    left_intercept = 877.142857146 
+
+    # Pre-computed values from the line: [722, 470, 1110, 720]
+    right_slope = 0.6443298969
+    right_intercept = 4.793814441
+
+    src_top_offset = 0.645 * n_rows
+    src_bottom_offset = 0.020 * n_rows
+
+    src = np.float32([[(src_top_offset - left_intercept) / left_slope, src_top_offset], # Top left
+                      [(src_top_offset - right_intercept) / right_slope, src_top_offset], # Top right
+                      [(n_rows - src_bottom_offset - left_intercept) / left_slope, n_rows - src_bottom_offset], # Bottom left
+                      [(n_rows - src_bottom_offset - right_intercept) / right_slope, n_rows - src_bottom_offset]]) # Bottom right
+
+
+    # Compute dst
+
+    dst_offset = 0.220 * n_cols
+
+    dst = np.float32([[dst_offset, 0], # Top left
+                      [n_cols - dst_offset, 0], # Top right
+                      [dst_offset, n_rows], # Bottom left
+                      [n_cols - dst_offset, n_rows]]) # Bottom right
+
+    return src, dst
+
+"""
 def pre_process_image(image, mtx, dist, src, dst, n_rows, n_cols, debug_path = None):
 
     image_undistorted = cv2.undistort(image, mtx, dist, None, mtx)
@@ -222,3 +256,4 @@ def post_process_image(image_undistorted, left_fit, right_fit, curvature, deviat
         save_image(debug_path, 'step08_lane_image.png', lane_image)
 
     return lane_image
+"""

@@ -6,11 +6,11 @@ import numpy as np
 from shutil import rmtree
 from os.path import join as path_join
 
-from code.misc import file_exists, folder_guard, folder_is_empty, remove_ext, get_file_name_base, compute_src_and_dst
+from code.misc import file_exists, folder_guard, folder_is_empty, remove_ext, get_file_name_base #, compute_src_and_dst
 from code.io import load_images, save_processed_data, load_processed_data
 from code.plots import plot_images
 from code.calibration import camera_calibrate, save_calibration_data, load_calibration_data
-from code.process import pre_process_image, pre_process_frames, post_process_image
+#from code.process import pre_process_image, pre_process_frames, post_process_image
 from code.detect import LaneDetector
 
 from code.draw import draw_lanes
@@ -189,6 +189,7 @@ def main():
         print(ERROR_PREFIX + 'Camera calibration data is still not loaded properly!')
         return
 
+    """
     if flag_run_pipeline_on_images:
         print(INFO_PREFIX + 'Running pipeline on images!')
 
@@ -206,8 +207,9 @@ def main():
                 folder_guard(debug_path)
 
             image_undistorted, gray_warped = pre_process_image(images[i], mtx, dist, src, dst, n_rows, n_cols, debug_path = debug_path)
+    """
 
-
+    """
     if flag_run_pipeline_on_videos and flag_debug:
 
         # Step 1: Pre process
@@ -215,7 +217,7 @@ def main():
         if not flag_processed_frames_exists:
             print(INFO_PREFIX + 'Pre processing video frames for: ' + path_pipeline_video_input)
 
-            src, dst = compute_src_and_dst(n_rows, n_cols)
+            #src, dst = compute_src_and_dst(n_rows, n_cols)
 
             images_undistorted, images_gray = pre_process_frames(path_pipeline_video_input, mtx, dist, src, dst, n_rows, n_cols, args.video_codec)
 
@@ -242,7 +244,7 @@ def main():
 
             if i % 50 == 0:
                 print(INFO_PREFIX + 'Processed frames: ' +  str(i) + '/' + str(n_frames))
-
+    """
 
 
 
@@ -268,9 +270,9 @@ def main():
             print(INFO_PREFIX + 'Loading calibration data from: ' + path_cam_calibrate_save)
             mtx, dist = load_calibration_data(path_cam_calibrate_save)
 
-        src, dst = compute_src_and_dst(n_rows, n_cols)
+        #src, dst = compute_src_and_dst(n_rows, n_cols)
 
-        lane_detector = LaneDetector(n_rows, n_cols)
+        lane_detector = LaneDetector(n_rows, n_cols, mtx, dist,)
 
         cap = cv2.VideoCapture(path_pipeline_video_input)
 
@@ -293,11 +295,13 @@ def main():
                 if i % 50 == 0:
                     print(INFO_PREFIX + 'Frame ' + str(i) + '/' + str(n_frames))
 
-                image_undistorted, gray_warped = pre_process_image(frame, mtx, dist, src, dst, n_rows, n_cols)
+                #image_undistorted, gray_warped = pre_process_image(frame, mtx, dist, src, dst, n_rows, n_cols)
 
-                left_fit, right_fit, curvature, deviation = lane_detector.detect(gray_warped)
+                #left_fit, right_fit, curvature, deviation = lane_detector.detect(frame)
 
-                lane_image = post_process_image(image_undistorted, left_fit, right_fit, curvature, deviation, src, dst, n_rows, n_cols)
+                lane_image = lane_detector.detect(frame)
+
+                #lane_image = post_process_image(image_undistorted, left_fit, right_fit, curvature, deviation, src, dst, n_rows, n_cols)
                 
                 out.write(lane_image)
             else:
