@@ -31,4 +31,6 @@ def plot_images(images, titles = None, title_fig_window = None, fig_size = (15, 
             plt.xticks([])
             plt.yticks([])
 
+
+    plt.tight_layout()
     plt.show()
