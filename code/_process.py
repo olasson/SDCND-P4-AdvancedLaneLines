@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from code.draw import draw_region, draw_lanes, draw_text
+#from code.draw import draw_region, draw_lanes, draw_text
 from code.io import save_image
 
 from code._config import IMAGE_MAX
