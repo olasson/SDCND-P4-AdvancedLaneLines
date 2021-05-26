@@ -189,78 +189,36 @@ def main():
         print(ERROR_PREFIX + 'Camera calibration data is still not loaded properly!')
         return
 
-    """
+
     if flag_run_pipeline_on_images:
         print(INFO_PREFIX + 'Running pipeline on images!')
 
-        src, dst = compute_src_and_dst(n_rows, n_cols)
+        #src, dst = compute_src_and_dst(n_rows, n_cols)
 
         print(INFO_PREFIX + 'Loading images!')
         images, file_names = load_images(path_pipeline_images)
 
         debug_path = None
 
-        for i in range(len(images)):
+        # Set buffer size to 0 since one image is not necessarily related to another
+        lane_detector = LaneDetector(n_rows, n_cols, mtx, dist, buffer_size = 0)
 
-            if flag_debug:
-                debug_path = path_join(path_pipeline_debug, remove_ext(file_names[i]))
-                folder_guard(debug_path)
+        n_images = len(images)
 
-            image_undistorted, gray_warped = pre_process_image(images[i], mtx, dist, src, dst, n_rows, n_cols, debug_path = debug_path)
-    """
+        images_result = np.zeros((n_images, n_rows, n_cols, 3), dtype = 'uint8')
 
-    """
-    if flag_run_pipeline_on_videos and flag_debug:
+        for i in range(n_images):
 
-        # Step 1: Pre process
+            #if flag_debug:
+            #    debug_path = path_join(path_pipeline_debug, remove_ext(file_names[i]))
+            #    folder_guard(debug_path)
 
-        if not flag_processed_frames_exists:
-            print(INFO_PREFIX + 'Pre processing video frames for: ' + path_pipeline_video_input)
+            #image_undistorted, gray_warped = pre_process_image(images[i], mtx, dist, src, dst, n_rows, n_cols, debug_path = debug_path)
+            lane_image = lane_detector.detect(images[i])
+            images_result[i] = lane_image
 
-            #src, dst = compute_src_and_dst(n_rows, n_cols)
+        plot_images(images_result, file_names)
 
-            images_undistorted, images_gray = pre_process_frames(path_pipeline_video_input, mtx, dist, src, dst, n_rows, n_cols, args.video_codec)
-
-            save_processed_data(path_pipeline_processed_frames, images_undistorted, images_gray)
-        else:
-            print(INFO_PREFIX + 'Loading pre processed frames from: '+ path_pipeline_video_input)
-            images_undistorted, images_gray = load_processed_data(path_pipeline_processed_frames)
-
-        # Step 2: Detect Lanes
-
-        n_frames = len(images_undistorted)
-
-        lane_detector = LaneDetector(n_rows, n_cols)
-
-        tmp = []
-
-        for i in range(n_frames):
-
-            gray_warped = images_gray[i]
-            image_undistorted = images_undistorted[i]
-
-            left_fit, right_fit, curvature, deviation = lane_detector.detect(gray_warped)
-
-
-            if i % 50 == 0:
-                print(INFO_PREFIX + 'Processed frames: ' +  str(i) + '/' + str(n_frames))
-    """
-
-
-
-
-
-
-
-
-
-
-    # Show
-
-    if flag_show_images:
-        print(INFO_PREFIX + 'Showing images from folder: ' + path_show_images)
-        images, file_names = load_images(path_show_images)
-        plot_images(images, file_names, n_max_cols = n_max_cols)
 
 
     if flag_run_pipeline_on_videos and (not flag_debug):
@@ -272,7 +230,7 @@ def main():
 
         #src, dst = compute_src_and_dst(n_rows, n_cols)
 
-        lane_detector = LaneDetector(n_rows, n_cols, mtx, dist,)
+        lane_detector = LaneDetector(n_rows, n_cols, mtx, dist)
 
         cap = cv2.VideoCapture(path_pipeline_video_input)
 
@@ -318,6 +276,49 @@ def main():
         print('Number of frames successfully processed: ', i)
         print('Result is found here: ', path_pipeline_video_output)
 
+    # Show
+
+    if flag_show_images:
+        print(INFO_PREFIX + 'Showing images from folder: ' + path_show_images)
+        images, file_names = load_images(path_show_images)
+        plot_images(images, file_names, n_max_cols = n_max_cols)
+
+    """
+    if flag_run_pipeline_on_videos and flag_debug:
+
+        # Step 1: Pre process
+
+        if not flag_processed_frames_exists:
+            print(INFO_PREFIX + 'Pre processing video frames for: ' + path_pipeline_video_input)
+
+            #src, dst = compute_src_and_dst(n_rows, n_cols)
+
+            images_undistorted, images_gray = pre_process_frames(path_pipeline_video_input, mtx, dist, src, dst, n_rows, n_cols, args.video_codec)
+
+            save_processed_data(path_pipeline_processed_frames, images_undistorted, images_gray)
+        else:
+            print(INFO_PREFIX + 'Loading pre processed frames from: '+ path_pipeline_video_input)
+            images_undistorted, images_gray = load_processed_data(path_pipeline_processed_frames)
+
+        # Step 2: Detect Lanes
+
+        n_frames = len(images_undistorted)
+
+        lane_detector = LaneDetector(n_rows, n_cols)
+
+        tmp = []
+
+        for i in range(n_frames):
+
+            gray_warped = images_gray[i]
+            image_undistorted = images_undistorted[i]
+
+            left_fit, right_fit, curvature, deviation = lane_detector.detect(gray_warped)
+
+
+            if i % 50 == 0:
+                print(INFO_PREFIX + 'Processed frames: ' +  str(i) + '/' + str(n_frames))
+    """
 
 
 main()
