@@ -2,6 +2,8 @@ import numpy as np
 import cv2
 from collections import deque
 
+from code._math import _fit_lanes, _fit_point
+
 #from code._config import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_MARGIN, IMAGE_MAX
 
 IMAGE_MAX = 255
@@ -13,45 +15,9 @@ WINDOW_MARGIN = 35
 WINDOW_MAX_SINGAL = WINDOW_WIDTH * WINDOW_HEIGHT * IMAGE_MAX
 
 MIN_POINTS_FIT = 4
-MIN_CONFIDENCE = 0.16
 
 NOISE_THRESHOLD = 1000
 
-MIN_LANES_DISTANCE = 510
-MAX_LANES_DISTANCE = 890
-
-MAX_DISTANCE_DIFF = 60
-MAX_DISTANCE_MEAN_DEVIATION = 80
-
-# Lane detection error codes
-LANE_IS_OK = 0
-LANE_OUT_OF_RANGE = 1
-LANE_DEVIATES_FROM_MEAN = 2
-LANE_DEVIATES_FROM_PREV_FRAME = 3
-LANE_LEFT_NOT_OK = 8
-LANE_RIGHT_NOT_OK = 9
-LANE_BOTH_NOT_OK = 8 + 9
-
-
-
-def _fit_lanes(lanes_centroids, ym, xm):
-
-    # Extract all left x values found
-    x_left_values = lanes_centroids[:,0] * xm
-    
-    # Extract all right x values found
-    x_right_values = lanes_centroids[:,1] * xm
-
-    # Extract all y values found
-    y_values = lanes_centroids[:,2] * ym
-
-    left_fit = np.polyfit(y_values, x_left_values , 2)
-    right_fit = np.polyfit(y_values, x_right_values , 2)
-
-    return left_fit, right_fit
-
-def _fit_point(fit, y, n_cols):
-    return np.clip(fit[0]*y**2 + fit[1]*y + fit[2], 0, n_cols)
 
 def _compute_signal_center(signal, offset, scale_confidence = False):
 
@@ -72,7 +38,6 @@ def _compute_signal_center(signal, offset, scale_confidence = False):
         confidence = 0.0
     
     return center, confidence
-
 
 
 def _estimate_first_centroid(gray_warped, n_rows, n_cols, signal, centroids_buffer):
@@ -165,50 +130,9 @@ def _estimate_centroids(gray_warped, n_rows, n_cols, signal, prev_left_x, prev_r
 
     return left_x, right_x, y, left_confidence, right_confidence
 
-def _compute_mean_distance(p1, p2):
-    return np.sqrt(np.sum((p1 - p2)**2) / len(p1))
-
-def _infer_lane_error_code(centroids, centroids_buffer, confidences, last_lanes_distance):
 
 
-    left_confidence, right_confidence = np.mean(confidences, axis = 0)
 
-
-    lane_left_rating = 0
-    if left_confidence < MIN_CONFIDENCE:
-        lane_left_rating = 8
-
-    lane_right_rating = 0
-    if right_confidence < MIN_CONFIDENCE:
-        lane_right_rating = 9
-
-    if (lane_left_rating + lane_right_rating) == LANE_BOTH_NOT_OK:
-        return LANE_BOTH_NOT_OK
-    
-    if lane_left_rating == LANE_LEFT_NOT_OK and lane_right_rating == LANE_IS_OK:
-        return LANE_LEFT_NOT_OK
-
-    if lane_right_rating == LANE_RIGHT_NOT_OK and lane_left_rating == LANE_IS_OK:
-        return LANE_RIGHT_NOT_OK
-
-    lanes_current_distance = _compute_mean_distance(centroids[:,0], centroids[:,1])
-
-    if (lanes_current_distance < MIN_LANES_DISTANCE) or lanes_current_distance > MAX_LANES_DISTANCE:
-        return LANE_OUT_OF_RANGE
-
-    if last_lanes_distance is not None:
-        if abs(lanes_current_distance - last_lanes_distance) > MAX_DISTANCE_DIFF:
-            return LANE_DEVIATES_FROM_PREV_FRAME
-
-    if len(centroids_buffer) > 0:
-
-        mean_centroids = np.mean(centroids_buffer, axis = 0)
-        mean_lanes_distance = _compute_mean_distance(mean_centroids[:,0], mean_centroids[:,1])
-
-        if abs(lanes_current_distance - mean_lanes_distance) > MAX_DISTANCE_MEAN_DEVIATION:
-            return LANE_DEVIATES_FROM_MEAN
-
-    return LANE_IS_OK
 """
 def _decode_lane_error_code(c):
 
@@ -228,18 +152,3 @@ def _decode_lane_error_code(c):
         print('LANE_ERROR: Both lanes not OK!')
 """
 
-def _compute_curvature(left_fit, right_fit, y_eval):
-
-   
-    left_curverad = ((1 + (2 * left_fit[0] * y_eval + left_fit[1])**2)**1.5) / np.absolute(2 * left_fit[0])
-    right_curverad = ((1 + (2 * right_fit[0] * y_eval + right_fit[1])**2)**1.5) / np.absolute(2 * right_fit[0])
-
-    return (left_curverad, right_curverad)
-
-def _compute_deviation(left_fit, right_fit, y_eval, x_eval):
-    
-    l_x = left_fit[0] * y_eval ** 2 + left_fit[1] * y_eval + left_fit[2]
-    r_x = right_fit[0] * y_eval ** 2 + right_fit[1] * y_eval + right_fit[2]
-    center = (l_x + r_x) / 2.0
-    
-    return center - x_eval / 2.0

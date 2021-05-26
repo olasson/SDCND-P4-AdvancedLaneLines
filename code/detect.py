@@ -6,8 +6,11 @@ from code.io import save_image
 
 from code._draw import _draw_region, _draw_lanes, _draw_text
 
-from code._centroids import (_fit_lanes, _estimate_first_centroid, _estimate_centroids, _compute_curvature, _compute_deviation, 
-                             _infer_lane_error_code, _compute_mean_distance)
+from code._math import _fit_lanes, _compute_mean_distance, _compute_curvature, _compute_deviation
+
+from code._error import _infer_lane_error_code
+
+from code._centroids import _estimate_first_centroid, _estimate_centroids
 from code._centroids import WINDOW_WIDTH, WINDOW_HEIGHT, IMAGE_MAX
 
 from code._process import _threshold_gradient, _threshold_color, _warp_image, _unwarp_image, _compute_src_and_dst
