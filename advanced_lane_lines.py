@@ -7,11 +7,11 @@ from shutil import rmtree
 from os.path import join as path_join
 
 from code.misc import file_exists, folder_guard, folder_is_empty, remove_ext, get_file_name_base, compute_src_and_dst
-from code.io import load_images, save_frame_data, load_frame_data
+from code.io import load_images, save_processed_data, load_processed_data
 from code.plots import plot_images
 from code.calibration import camera_calibrate, save_calibration_data, load_calibration_data
 from code.process import pre_process_image, pre_process_frames, post_process_image
-from code.lanes import LaneDetector
+from code.detect import LaneDetector
 
 from code.draw import draw_lanes
 
@@ -217,16 +217,16 @@ def main():
 
             src, dst = compute_src_and_dst(n_rows, n_cols)
 
-            frames = pre_process_frames(path_pipeline_video_input, mtx, dist, src, dst, n_rows, n_cols, args.video_codec)
+            images_undistorted, images_gray = pre_process_frames(path_pipeline_video_input, mtx, dist, src, dst, n_rows, n_cols, args.video_codec)
 
-            save_frame_data(path_pipeline_processed_frames, frames)
+            save_processed_data(path_pipeline_processed_frames, images_undistorted, images_gray)
         else:
             print(INFO_PREFIX + 'Loading pre processed frames from: '+ path_pipeline_video_input)
-            frames = load_frame_data(path_pipeline_processed_frames)
+            images_undistorted, images_gray = load_processed_data(path_pipeline_processed_frames)
 
         # Step 2: Detect Lanes
 
-        n_frames = len(frames)
+        n_frames = len(images_undistorted)
 
         lane_detector = LaneDetector(n_rows, n_cols)
 
@@ -234,21 +234,14 @@ def main():
 
         for i in range(n_frames):
 
-            gray_warped = frames[i]
+            gray_warped = images_gray[i]
+            image_undistorted = images_undistorted[i]
 
-            left_fit, right_fit = lane_detector.detect(gray_warped)
+            left_fit, right_fit, curvature, deviation = lane_detector.detect(gray_warped)
 
-            image_tmp = draw_lanes(gray_warped, n_rows, left_fit, right_fit)
 
             if i % 50 == 0:
-                print(INFO_PREFIX + 'Processed frame ' +  str(i) + '/' + str(n_frames))
-
-            tmp.append(image_tmp)
-            if i == 3:
-                break
-
-        tmp = np.array(tmp)
-        plot_images(tmp)
+                print(INFO_PREFIX + 'Processed frames: ' +  str(i) + '/' + str(n_frames))
 
 
 
@@ -268,7 +261,7 @@ def main():
         plot_images(images, file_names, n_max_cols = n_max_cols)
 
 
-    if flag_run_pipeline_on_videos:
+    if flag_run_pipeline_on_videos and (not flag_debug):
         print(INFO_PREFIX + 'Running pipeline on video!')
 
         if flag_cam_is_calibrated or ((mtx is None) and (dist is None)):
@@ -302,9 +295,9 @@ def main():
 
                 image_undistorted, gray_warped = pre_process_image(frame, mtx, dist, src, dst, n_rows, n_cols)
 
-                left_fit, right_fit = lane_detector.detect(gray_warped)
+                left_fit, right_fit, curvature, deviation = lane_detector.detect(gray_warped)
 
-                lane_image = post_process_image(image_undistorted, left_fit, right_fit, src, dst, n_rows, n_cols)
+                lane_image = post_process_image(image_undistorted, left_fit, right_fit, curvature, deviation, src, dst, n_rows, n_cols)
                 
                 out.write(lane_image)
             else:
