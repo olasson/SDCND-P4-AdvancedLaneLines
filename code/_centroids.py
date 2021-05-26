@@ -165,7 +165,7 @@ def _estimate_centroids(gray_warped, n_rows, n_cols, signal, prev_left_x, prev_r
 def _compute_mean_distance(p1, p2):
     return np.sqrt(np.sum((p1 - p2)**2) / len(p1))
 
-def _compute_lane_error_code(centroids, centroids_buffer, confidences, last_lanes_distance):
+def _infer_lane_error_code(centroids, centroids_buffer, confidences, last_lanes_distance):
 
 
     left_confidence, right_confidence = np.mean(confidences, axis = 0)
@@ -206,7 +206,7 @@ def _compute_lane_error_code(centroids, centroids_buffer, confidences, last_lane
             return LANE_DEVIATES_FROM_MEAN
 
     return LANE_IS_OK
-
+"""
 def _decode_lane_error_code(c):
 
     if c == LANE_IS_OK:
@@ -223,6 +223,7 @@ def _decode_lane_error_code(c):
         print('LANE_ERROR: Right lane not OK!')
     elif c == LANE_BOTH_NOT_OK:
         print('LANE_ERROR: Both lanes not OK!')
+"""
 
 def _compute_curvature(left_fit, right_fit, y_eval):
 

@@ -6,7 +6,7 @@ from code.draw import draw_lanes, draw_text
 
 
 from code._centroids import (_fit_lanes, _estimate_first_centroid, _estimate_centroids, _compute_curvature, _compute_deviation, 
-                             _compute_lane_error_code, _compute_mean_distance)
+                             _infer_lane_error_code, _compute_mean_distance)
 
 from code._process import _threshold_gradient, _threshold_color, _warp_image, _unwarp_image, _compute_src_and_dst
 
@@ -79,7 +79,7 @@ class LaneDetector:
         centroids = np.array(centroids)
         confidences = np.array(confidences)
 
-        lane_error_code = _compute_lane_error_code(centroids, self.centroids_buffer, confidences, self.last_lanes_distance)
+        lane_error_code = _infer_lane_error_code(centroids, self.centroids_buffer, confidences, self.last_lanes_distance)
         #_decode_lane_error_code(lane_error_code)
 
         if (lane_error_code != 0) and (len(self.centroids_buffer) > 0):
