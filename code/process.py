@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from code.draw import draw_region, draw_lanes
+from code.draw import draw_region, draw_lanes, draw_text
 from code.io import save_image
 
 SOBEL_KERNEL = 5
@@ -178,7 +178,8 @@ def pre_process_frames(path, mtx, dist, src, dst, n_rows, n_cols, video_codec = 
 
     n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    frames = np.zeros((n_frames, n_rows, n_cols), dtype = 'uint8')
+    images_gray = np.zeros((n_frames, n_rows, n_cols), dtype = 'uint8')
+    images_undistorted = np.zeros((n_frames, n_rows, n_cols, 3), dtype = 'uint8')
 
     fourcc = cv2.VideoWriter_fourcc(*video_codec)
     
@@ -192,7 +193,8 @@ def pre_process_frames(path, mtx, dist, src, dst, n_rows, n_cols, video_codec = 
 
             image_undistorted, gray_warped = pre_process_image(frame, mtx, dist, src, dst, n_rows, n_cols)
 
-            frames[i] = gray_warped
+            images_gray[i] = gray_warped
+            images_undistorted[i] = image_undistorted
 
             i = i + 1
             if i % 50 == 0:
@@ -202,16 +204,18 @@ def pre_process_frames(path, mtx, dist, src, dst, n_rows, n_cols, video_codec = 
 
     cap.release()
 
-    return frames
+    return images_undistorted, images_gray
 
 
-def post_process_image(image_undistorted, left_fit, right_fit, src, dst, n_rows, n_cols, debug_path = None):
+def post_process_image(image_undistorted, left_fit, right_fit, curvature, deviation, src, dst, n_rows, n_cols, debug_path = None):
 
     image_tmp = draw_lanes(image_undistorted, n_rows, left_fit, right_fit, marker_width = 20, fill_color = (0, 255, 0))
 
     image_tmp = unwarp_image(image_tmp, src, dst, n_rows, n_cols)
 
     lane_image = cv2.addWeighted(image_undistorted, 1.0, image_tmp, 1.0, 0.0)
+
+    draw_text(lane_image, curvature, deviation)
 
     if debug_path is not None:
 
