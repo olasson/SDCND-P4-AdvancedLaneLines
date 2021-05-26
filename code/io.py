@@ -25,7 +25,7 @@ def load_images(path):
 def save_image(path, file_name, image):
     cv2.imwrite(path_join(path, file_name), image)
 
-
+"""
 def save_processed_data(path, images_undistorted, images_gray):
 
     data = {'images_undistorted': images_undistorted, 'images_gray': images_gray} 
@@ -42,3 +42,4 @@ def load_processed_data(path):
     images_gray = data['images_gray']
 
     return images_undistorted, images_gray
+"""
