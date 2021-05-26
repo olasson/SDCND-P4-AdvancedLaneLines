@@ -103,7 +103,7 @@ class LaneDetector:
         # Part 3: Post-processing
         #--------------------------
 
-        image_tmp = _draw_lanes(image_undistorted, self.n_rows, left_fit, right_fit, marker_width = 20, fill_color = (0, 255, 0))
+        image_tmp = _draw_lanes(image_undistorted, self.n_rows, left_fit, right_fit)
 
         image_tmp = _unwarp_image(image_tmp, self.src, self.dst, self.n_rows, self.n_cols)
 
@@ -117,9 +117,13 @@ class LaneDetector:
             # Create a warped RGB image for src and dst
             image_warped = _warp_image(image, self.src, self.dst, self.n_rows, self.n_cols)
 
+            # Create a lane image without the filler
+            image_raw_lanes = _draw_lanes(image_undistorted, self.n_rows, left_fit, right_fit, fill_color = (0, 0, 0))
+
             save_image(debug_path, 'step01_image_undistorted.png', image_undistorted)
-            save_image(debug_path, 'step03_gradient_binary.png', gradient_binary * IMAGE_MAX)
-            save_image(debug_path, 'step04_color_binary.png', color_binary * IMAGE_MAX)
+            save_image(debug_path, 'step02_gradient_binary.png', gradient_binary * IMAGE_MAX)
+            save_image(debug_path, 'step03_color_binary.png', color_binary * IMAGE_MAX)
+            save_image(debug_path, 'step04_image_raw_lanes.png', image_raw_lanes)
             save_image(debug_path, 'step05_combined_threshold.png', combined_threshold)
             save_image(debug_path, 'step06_src.png', _draw_region(image, self.src))
             save_image(debug_path, 'step07_dst.png', _draw_region(image_warped, self.dst))
