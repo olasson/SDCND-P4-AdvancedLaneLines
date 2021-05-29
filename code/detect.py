@@ -1,6 +1,13 @@
+"""
+This file contains the implementation of the lane detector.
+"""
+
 import numpy as np
 import cv2
 from collections import deque
+
+
+# Custom imports
 
 from code.io import save_image
 
@@ -19,7 +26,10 @@ M_PER_PIXELS_X = 3.7/700
 M_PER_PIXELS_Y = 3/110
 
 class LaneDetector:
-
+    """
+    Implements a simple lane detector. 
+    This is implemented as a class, since it makes managing the two internal states easier.
+    """
 
     def __init__(self, n_rows, n_cols, mtx, dist, buffer_size = 15):
 
@@ -41,6 +51,23 @@ class LaneDetector:
         self.dst = dst
 
     def detect(self, image, debug_path = None):
+
+        """
+        Detect lane lines in an image
+
+        Inputs
+        ----------
+        image: numpy.ndarray
+            A single RGB image
+        debug_path: (None | str)
+            Path where debug images will be stored
+
+        Outputs
+        -------
+        lane_image: numpy.ndarray
+            A single RGB image with the lane clearly marked (hopefully)
+
+        """
 
         #--------------------------
         # Part 1: Pre-process image

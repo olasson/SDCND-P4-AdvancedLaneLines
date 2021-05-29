@@ -1,3 +1,8 @@
+"""
+This file contains a function for visualizing images.
+"""
+
+
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,6 +10,31 @@ import matplotlib.pyplot as plt
 N_MAX_IMAGES = 50
 
 def plot_images(images, titles = None, title_fig_window = None, fig_size = (15, 15), font_size = 12, show_ticks = False, n_max_cols = 4):
+    """
+    Plot a set of images
+    
+    Inputs
+    ----------
+    images : numpy.ndarray
+        A set of images, RGB or grayscale
+    titles: (None | list)
+        A set of image titles to be displayed on top of an image
+    title_fig_window: (None | string)
+        Title for the figure window
+    fig_size: (int, int)
+        Tuple specifying figure width and height in inches
+    font_size: int
+        Fontsize of 'titles'
+    show_ticks: bool
+        Show ticks or not.
+    n_cols_max: int
+        Maximum number of columns allowed in figure
+    Outputs
+    -------
+    plt.figure
+        Figure showing 'images' in an (n_rows x n_cols) layout
+    
+    """
 
     n_images = len(images)
 

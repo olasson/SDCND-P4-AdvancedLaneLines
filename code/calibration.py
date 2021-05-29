@@ -1,3 +1,7 @@
+"""
+This file contains functions for performing camera calibration.
+"""
+
 import cv2
 import pickle
 import numpy as np
@@ -8,6 +12,28 @@ from code.io import load_images, save_image
 # https://docs.opencv.org/master/dc/dbb/tutorial_py_calibration.html 
 
 def camera_calibrate(path, n_icorners_x = 9, n_icorners_y = 6, debug_path = None):
+    """
+    Perform camera calibration based on a set of images
+
+    Inputs
+    ----------
+    path: str
+        Path to a folder containing a set of calibration images
+    icorners_x, n_icorners_y: int, int
+        The number of "inner" corners in the x and y dir
+    debug_path: (None | str)
+        Path where debug images will be stored
+
+    Outputs
+    -------
+    ret: bool
+        Boolean indicating the success (success = True) of the calibration
+    mtx: numpy.ndarray
+        Camera matrix
+    dist: numpy.ndarray
+        Camera distortion coefficients
+
+    """
 
     mtx = None
     dist = None
@@ -59,6 +85,23 @@ def camera_calibrate(path, n_icorners_x = 9, n_icorners_y = 6, debug_path = None
 
 
 def save_calibration_data(path, mtx, dist):
+    """
+    Save camera matrix and distortion coefficients as a pickled file
+
+    Inputs
+    ----------
+    path: str
+        Path to where the data will be saved
+    mtx: numpy.ndarray
+        Camera matrix
+    dist: numpy.ndarray
+        Camera distortion coefficients
+
+    Outputs
+    -------
+        A pickled file saved at 'path'
+
+    """
 
     data = {'mtx': mtx, 'dist': dist} 
 
@@ -66,7 +109,22 @@ def save_calibration_data(path, mtx, dist):
         pickle.dump(data, f, protocol = pickle.HIGHEST_PROTOCOL)
 
 def load_calibration_data(path):
+    """
+    Load camera matrix and distortion coefficients from a pickled file
 
+    Inputs
+    ----------
+    path: str
+        Path to where the data will be saved
+
+    Outputs
+    -------
+    mtx: numpy.ndarray
+        Camera matrix
+    dist: numpy.ndarray
+        Camera distortion coefficients
+
+    """
 
     with open(path, mode = 'rb') as f:
         data = pickle.load(f)

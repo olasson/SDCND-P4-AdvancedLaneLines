@@ -1,17 +1,32 @@
+"""
+This file contains internal, supporting functions for detect.py. They are used for preparing the image for lane detection.
+"""
+
 import cv2
 import numpy as np
-
-#from code.draw import draw_region, draw_lanes, draw_text
-#from code.io import save_image
 
 IMAGE_MAX = 255
 
 SOBEL_KERNEL = 5
-#IMAGE_MAX = 255
 
 # Internals
 
 def _threshold_binary(image, thresholds):
+    """
+    Apply binary thresholding to an image
+
+    Inputs
+    ----------
+    image: numpy.ndarray
+        A single image, grayscale or RGB
+    thresholds: numpy.ndarray
+        A list containing a min and max value for thresholding
+
+    Outputs
+    -------
+        binary_out: numpy.ndarray
+            Binary thresholded image with same x,y dimensions as image
+    """
 
     binary_out = np.zeros_like(image)
 
@@ -20,6 +35,21 @@ def _threshold_binary(image, thresholds):
     return binary_out
 
 def _threshold_binary_sobel_abs(sobel, thresholds):
+    """
+    Apply binary thresholding to a sobel derivative
+
+    Inputs
+    ----------
+    sobel: numpy.ndarray
+        Sobel derivative
+    thresholds: numpy.ndarray
+        A list containing a min and max value for thresholding
+
+    Outputs
+    -------
+        binary_out: numpy.ndarray
+            Binary thresholded image with same x,y dimensions as image
+    """
 
     sobel_tmp= np.absolute(sobel)
 
@@ -31,6 +61,21 @@ def _threshold_binary_sobel_abs(sobel, thresholds):
     return binary_out
 
 def _threshold_binary_sobel_gradmag(sobel_x, sobel_y, thresholds):
+    """
+    Apply binary thresholding to the sobel gradient magnitude
+
+    Inputs
+    ----------
+    sobel_x, sobel_y: numpy.ndarray, numpy.ndarray
+        Sobel derivatives in x-dir and y-dir
+    thresholds: numpy.ndarray
+        A list containing a min and max value for thresholding
+
+    Outputs
+    -------
+        binary_out: numpy.ndarray
+            Binary thresholded image with same x,y dimensions as image
+    """
 
     sobel_tmp = np.sqrt((sobel_x * sobel_x) + (sobel_y * sobel_y))
 
@@ -44,6 +89,21 @@ def _threshold_binary_sobel_gradmag(sobel_x, sobel_y, thresholds):
 
 
 def _threshold_binary_sobel_dir(sobel_x, sobel_y, thresholds):
+    """
+    Apply binary thresholding to the sobel direction
+
+    Inputs
+    ----------
+    sobel_x, sobel_y: numpy.ndarray, numpy.ndarray
+        Sobel derivatives in x-dir and y-dir
+    thresholds: numpy.ndarray
+        A list containing a min and max value for thresholding
+
+    Outputs
+    -------
+        binary_out: numpy.ndarray
+            Binary thresholded image with same x,y dimensions as image
+    """
 
     sobel_x_abs = np.absolute(sobel_x)
     sobel_y_abs = np.absolute(sobel_y)
@@ -56,6 +116,21 @@ def _threshold_binary_sobel_dir(sobel_x, sobel_y, thresholds):
 
 
 def _threshold_binary_hsv_channel(image, c, thresholds):
+    """
+    Apply binary thresholding a HSV color channel
+
+    Inputs
+    ----------
+    image: numpy.ndarray
+        A single RGB image
+    c: int
+        The index of the color channel
+
+    Outputs
+    -------
+        binary_out: numpy.ndarray
+            Binary thresholded image with same x,y dimensions as image
+    """
 
     color_channel = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)[:, :, c]
 
@@ -64,7 +139,21 @@ def _threshold_binary_hsv_channel(image, c, thresholds):
     return binary_out
 
 def _threshold_binary_hls_channel(image, c, thresholds):
+    """
+    Apply binary thresholding a HLS color channel
 
+    Inputs
+    ----------
+    image: numpy.ndarray
+        A single RGB image
+    c: int
+        The index of the color channel
+
+    Outputs
+    -------
+        binary_out: numpy.ndarray
+            Binary thresholded image with same x,y dimensions as image
+    """
     color_channel = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)[:, :, c]
 
     binary_out = _threshold_binary(color_channel, thresholds)
@@ -72,6 +161,21 @@ def _threshold_binary_hls_channel(image, c, thresholds):
     return binary_out
 
 def _threshold_binary_lab_channel(image, c, thresholds):
+    """
+    Apply binary thresholding a LAB color channel
+
+    Inputs
+    ----------
+    image: numpy.ndarray
+        A single RGB image
+    c: int
+        The index of the color channel
+
+    Outputs
+    -------
+        binary_out: numpy.ndarray
+            Binary thresholded image with same x,y dimensions as image
+    """
 
     color_channel = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)[:, :, c]
 
@@ -82,6 +186,19 @@ def _threshold_binary_lab_channel(image, c, thresholds):
 # Gradient
 
 def _threshold_gradient(image):
+    """
+    Apply gradient thresholding to an image
+
+    Inputs
+    ----------
+    image: numpy.ndarray
+        A single RGB image
+
+    Outputs
+    -------
+        gradient_binary: numpy.ndarray
+            Composite thresholded image with same x,y dimensions as image
+    """
 
     gray_image  = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     sobel_x = cv2.Sobel(gray_image, cv2.CV_64F, 1, 0, ksize = SOBEL_KERNEL)
@@ -104,6 +221,19 @@ def _threshold_gradient(image):
 # Color
 
 def _threshold_color(image):
+    """
+    Apply color thresholding to an image
+
+    Inputs
+    ----------
+    image: numpy.ndarray
+        A single RGB image
+
+    Outputs
+    -------
+        color_binary: numpy.ndarray
+            Composite thresholded image with same x,y dimensions as image
+    """
 
     r_channel_binary = _threshold_binary(image[:, :, 2], [195, IMAGE_MAX])
     l_channel_binary = _threshold_binary_hls_channel(image, 1, [195, IMAGE_MAX])
@@ -120,6 +250,27 @@ def _threshold_color(image):
 
 
 def _warp_image(image, src, dst, n_rows, n_cols):
+    """
+    Apply perspective transform (warping) to an image
+
+    Inputs
+    ----------
+    image: numpy.ndarray
+        A single RGB or grayscale image
+    src: numpy.ndarray
+        An array containing four source points
+    dst: numpy.ndarray
+        An array containing four destination points
+    n_rows: int
+        Number of rows in image
+    n_cols: int
+        Number of columns in image
+
+    Outputs
+    -------
+        image_warped: numpy.ndarray
+            Image with perspective transform applied
+    """
 
     warp_matrix = cv2.getPerspectiveTransform(src, dst)
 
@@ -128,12 +279,55 @@ def _warp_image(image, src, dst, n_rows, n_cols):
     return image_warped
 
 def _unwarp_image(image, src, dst, n_rows, n_cols):
+    """
+    Apply "inverse" perspective transform (warping) to an image
 
+    Inputs
+    ----------
+    image: numpy.ndarray
+        A single RGB or grayscale image
+    src: numpy.ndarray
+        An array containing four source points
+    dst: numpy.ndarray
+        An array containing four destination points
+    n_rows: int
+        Number of rows in image
+    n_cols: int
+        Number of columns in image
+
+    Outputs
+    -------
+        image_warped: numpy.ndarray
+            Image with "inverse" perspective transform applied
+    """
+
+    # Flip the order of src and dst
     unwarped_image = _warp_image(image, dst, src, n_rows, n_cols)
 
     return unwarped_image
 
 def _compute_src_and_dst(n_rows, n_cols):
+    """
+    Helper function to compute src and dst quickly
+
+    Inputs
+    ----------
+    n_rows: int
+        Number of rows in image
+    n_cols: int
+        Number of columns in image
+
+    Outputs
+    -------
+        src: numpy.ndarray
+            An array containing four source points
+        dst: numpy.ndarray
+            An array containing four destination points
+
+    Notes
+    -------
+        Use _draw_region() from _draw.py to visualize
+    """
 
     # Compute src
 
@@ -164,86 +358,3 @@ def _compute_src_and_dst(n_rows, n_cols):
                       [n_cols - dst_offset, n_rows]]) # Bottom right
 
     return src, dst
-
-"""
-def pre_process_image(image, mtx, dist, src, dst, n_rows, n_cols, debug_path = None):
-
-    image_undistorted = cv2.undistort(image, mtx, dist, None, mtx)
-
-    #image_gamma = gamma_correction(image_undistorted, 4.0)
-
-    gradient_binary = threshold_gradient(image_undistorted)
-    color_binary = threshold_color(image_undistorted)
-
-    combined_threshold = np.zeros_like(gradient_binary)
-    combined_threshold[(gradient_binary == 1) | (color_binary) == 1] = IMAGE_MAX
-
-    gray_warped = warp_image(combined_threshold, src, dst, n_rows, n_cols)
-
-    if debug_path is not None:
-
-        # Create a warped RGB image for src and dst
-        image_warped = warp_image(image, src, dst, n_rows, n_cols)
-
-        save_image(debug_path, 'step01_image_undistorted.png', image_undistorted)
-        #save_image(debug_path, 'step02_image_gamma.png', image_gamma)
-        save_image(debug_path, 'step03_gradient_binary.png', gradient_binary * IMAGE_MAX)
-        save_image(debug_path, 'step04_color_binary.png', color_binary * IMAGE_MAX)
-        save_image(debug_path, 'step05_combined_threshold.png', combined_threshold)
-        save_image(debug_path, 'step06_src.png', draw_region(image, src))
-        save_image(debug_path, 'step07_dst.png', draw_region(image_warped, dst))
-
-    return image_undistorted, gray_warped
-
-
-def pre_process_frames(path, mtx, dist, src, dst, n_rows, n_cols, video_codec = '.mp4'):
-
-    cap = cv2.VideoCapture(path)
-
-    n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
-    images_gray = np.zeros((n_frames, n_rows, n_cols), dtype = 'uint8')
-    images_undistorted = np.zeros((n_frames, n_rows, n_cols, 3), dtype = 'uint8')
-
-    fourcc = cv2.VideoWriter_fourcc(*video_codec)
-    
-    i = 0
-
-    while(cap.isOpened()):
-
-        ret, frame = cap.read()
-
-        if ret:
-
-            image_undistorted, gray_warped = pre_process_image(frame, mtx, dist, src, dst, n_rows, n_cols)
-
-            images_gray[i] = gray_warped
-            images_undistorted[i] = image_undistorted
-
-            i = i + 1
-            if i % 50 == 0:
-                print('INFO:pre_process_frames(): Processed frame ' + str(i) + '/' + str(n_frames))
-        else:
-            break
-
-    cap.release()
-
-    return images_undistorted, images_gray
-
-
-def post_process_image(image_undistorted, left_fit, right_fit, curvature, deviation, src, dst, n_rows, n_cols, debug_path = None):
-
-    image_tmp = draw_lanes(image_undistorted, n_rows, left_fit, right_fit, marker_width = 20, fill_color = (0, 255, 0))
-
-    image_tmp = unwarp_image(image_tmp, src, dst, n_rows, n_cols)
-
-    lane_image = cv2.addWeighted(image_undistorted, 1.0, image_tmp, 1.0, 0.0)
-
-    draw_text(lane_image, curvature, deviation)
-
-    if debug_path is not None:
-
-        save_image(debug_path, 'step08_lane_image.png', lane_image)
-
-    return lane_image
-"""

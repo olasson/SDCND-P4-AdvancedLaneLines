@@ -1,8 +1,14 @@
+"""
+This file contains one internal, supporting function for detect.py. It is used to determine the quality of detected lane lines 
+"""
+
 import numpy as np
 
+# Custom import
 from code._math import _compute_mean_distance
 
 # Lane detection error codes
+
 LANE_IS_OK = 0
 LANE_OUT_OF_RANGE = 1
 LANE_DEVIATES_FROM_MEAN = 2
@@ -10,6 +16,8 @@ LANE_DEVIATES_FROM_PREV_FRAME = 3
 LANE_LEFT_NOT_OK = 8
 LANE_RIGHT_NOT_OK = 9
 LANE_BOTH_NOT_OK = 8 + 9
+
+# Local config
 
 MIN_LANES_DISTANCE = 510
 MAX_LANES_DISTANCE = 890
@@ -20,7 +28,22 @@ MAX_DISTANCE_DIFF = 60
 MAX_DISTANCE_MEAN_DEVIATION = 80
 
 def _infer_lane_error_code(centroids, centroids_buffer, confidences, last_lanes_distance):
+    """
+    Infer which error code applies to a lane line
 
+    Inputs
+    ----------
+    centroids: numpy.ndarray
+        Numpy array containing detected centroids. See _centroids.py
+    centroids_buffer : numpy.ndarray
+        Numpy array containing the detected centroids for the previous N frames. See detect.py
+    confidences: numpy.ndarray
+        Numpy array containing the confidences for each detected centroid
+
+    Outputs
+    -------
+        int: One of the defined error codes
+    """
 
     left_confidence, right_confidence = np.mean(confidences, axis = 0)
 
