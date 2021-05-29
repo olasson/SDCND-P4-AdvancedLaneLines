@@ -124,8 +124,6 @@ def main():
 
     flag_run_pipeline_on_videos = (path_pipeline_video_input != '')
 
-    flag_processed_frames_exists = file_exists(path_pipeline_processed_frames)
-
     flag_show_images = (path_show_images != '')
 
     flag_cam_is_calibrated = file_exists(path_cam_calibrate_save)
