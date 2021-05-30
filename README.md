@@ -36,3 +36,13 @@ The videos of the pipeline result is found in
 All arguments are technically optional. The program also checks for "illegal" argument combinations to an extent.
 
 See the main script linked above for a detailed list of supported arguments and their function. I will make an effort to specify which commands were used for different parts of the project.
+
+## Camera Calibration
+
+## Pipeline
+
+### Pre-processing
+
+### Lane Detection
+
+### Post-processing
