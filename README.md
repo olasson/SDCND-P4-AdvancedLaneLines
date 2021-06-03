@@ -162,7 +162,7 @@ The exact definitons of all above constans are found in the function definition 
     <img width="40%" height="40%" src="https://github.com/olasson/SDCND-T1-P4-AdvancedLaneLines/blob/master/images/result/straight_lines1/step07_dst.png">
 </p>
 
-The exact regions were found by trial and error. The perspective transform is thn applied to the combined threshold image to produce the final pre-processed image.
+The exact regions were found by trial and error. The perspective transform is then applied to the combined threshold image to produce the final pre-processed image.
 
 ### Lane Detection
 
@@ -177,8 +177,35 @@ This is simply a slightly more compact representation of two separate points:
         P_left = (left_x, y)
         P_right = (right_x, y)
 
-Where `P_left` is a point believed to be a point on the left lane, and `P_right` is a point believed to be a point on the right lane. The first step is to try to find a initial set of points. This is  done by the function `_estimate_first_centroid()` defined in `_centroids.py`. 
+Where `P_left` is a point believed to be a point on the left lane, and `P_right` is a point believed to be a point on the right lane. 
 
+The other concept used in the lane detection is the confidence level of a computed centroid. Specifically, each  `left_x` and `right_x` will have a confidence level associated with it, which is simply a scalar on the interval `[0,1]` where 0.0 is a complete lack of confidence, and 1.0 is complete confidence. This will later be used to filter out "bad" lane lines.    
+
+The first step is to try to find a initial set of points. This is  done by the function `_estimate_first_centroid()` defined in `_centroids.py`. Depending on wether or not it has previous data points stored in the centroid buffer it will compute  `left_min_index, left_max_index` and `right_min_index, right_max_index`. In addition it computes
+    
+    ...
+    window_top = int(n_rows * 0.75)
+    y = int(n_rows - WINDOW_HEIGHT / 2)
+    ...
+ 
+where `window_top` specifies that it will only look for the first centroids in the bottom "slice" of the image and  `y` is simply the y-coordiante in the centroid. Next, it does the following:
+    
+    ...
+    left_sum = np.sum(gray_warped[window_top:, left_min_index:left_max_index], axis=0)
+    ...
+Here, a region of the pre-processed image is converted to a 1D array by summing each column to a single value. 
+    
+    ...
+    left_signal = np.convolve(window_signal, left_sum)
+    ...
+    
+Next, a convolution is performed between the window signal (defined by the window width).
+
+    ...
+    left_x, left_confidence = _compute_signal_center(left_signal, left_min_index, scale_confidence = False)
+    ...
+
+and the same for `right_x`.  
 
 
 ### Post-processing
