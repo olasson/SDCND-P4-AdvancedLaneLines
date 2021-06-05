@@ -269,12 +269,28 @@ The pipeline can be used on an entire video by using the command:
 
     python advanced_lane_lines.py --video <path_to_video>
 
-which will save the file `./data/output_video.mp4`. 
+This will save a file under `./data/output_video.mp4`, which can then be manually renamed and moved.  
 
 ### Project video
 
+<p align="center">
+    <img width="80%" height="80%" src="https://github.com/olasson/SDCND-T1-P4-AdvancedLaneLines/blob/master/videos/result/project_video.gif">
+</p>
+
 ### Challenge video
 
+<p align="center">
+    <img width="80%" height="80%" src="https://github.com/olasson/SDCND-T1-P4-AdvancedLaneLines/blob/master/videos/result/challenge_video.gif">
+</p>
+
 ## Pipeline discussion
+
+The pipeline works reasonably well on both the project and challenge video. The most time consuming aspect of this project was the amount of trial and error. For example, all the thresholding values had to be manually tuned until a decent result was achieved. This type of hardcoding is likely not the best approach, and some method for handling drastically different light conditions could be investigated like gamma correction or histogram equalization or both. The second most time consuming part was handling a failed centroid detection. The heuristic implemented works decently, but another important points of improvement would be to make this even more robust. For example, handling complete loss of lane detection (a recover mechanism). 
+
+## Sources
+
+The following link was useful for implementing the convolution part of the algorithm
+
+https://stackoverflow.com/questions/20036663/understanding-numpys-convolve
 
 
