@@ -265,6 +265,16 @@ The resulting `lane_image` will look like this (assuming successful detection):
 
 ## Video results
 
+The pipeline can be used on an entire video by using the command:
+
+    python advanced_lane_lines.py --video <path_to_video>
+
+which will save the file `./data/output_video.mp4`. 
+
+### Project video
+
+### Challenge video
+
 ## Pipeline discussion
 
 
