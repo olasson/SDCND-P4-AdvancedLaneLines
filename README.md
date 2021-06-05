@@ -228,7 +228,7 @@ The first centroid found is then used as a reference by the `_estimate_centroids
     right_x, right_confidence = _compute_window_center(conv_signal, n_cols, prev_right_x)
     ...
 
-Note that here the confidence is scaled (`scale_confidence = True` by default). The algorithm assumes that `prev_left_x` and `prev_right_x` is never `None` which is why `_estimate_first_centroid()` simply assumes that the first centroid detected is always good. It will then attempt to handle missing values in various ways, which are described in detail in `_estimate_centroids()`, but the end result should always be concrete left, right and y values for all centroid. 
+Note that here the confidence is scaled (`scale_confidence = True` by default). The algorithm assumes that `prev_left_x` and `prev_right_x` is never `None` which is why `_estimate_first_centroid()` simply assumes that the first centroid detected is always good. It will then attempt to handle missing values in various ways, which are described in detail in `_estimate_centroids()`, but the end result should always be float values all centroids. 
 
 After `_estimate_centroids()` have looped over the image, the algorithm uses a very simply error detection sub-algorithm to attempt to infer any "bad" lane lines. This sub-algorithm is found in `_error.py` and specifically `_infer_lane_error_code()` which returns `0` is the lane is OK. Any other error code is treated as sufficient to discard the lane. In the event that the lane is bad, the LaneDetector uses the centroids from the previous frames instead
     
@@ -237,6 +237,15 @@ After `_estimate_centroids()` have looped over the image, the algorithm uses a v
         centroids = self.centroids_buffer[-1]
     ...
     
+Next, the centroids are used to fit the lanes to polyomials
+
+    ...
+    left_fit, right_fit = _fit_lanes(centroids, 1, 1)
+    left_fit_scaled, right_fit_scaled = _fit_lanes(centroids, M_PER_PIXELS_Y, M_PER_PIXELS_X)
+    ...
+
+where the "scaled" version of the fits are used to compute the curvature and deviation from center in (approximately) real-world units (meters). 
+
 
 
 ### Post-processing
