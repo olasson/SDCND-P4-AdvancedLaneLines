@@ -188,20 +188,17 @@ The first step is to try to find a initial set of points. This is  done by the f
     y = int(n_rows - WINDOW_HEIGHT / 2)
     ...
  
-where `window_top` specifies that it will only look for the first centroids in the bottom "slice" of the image and  `y` is simply the y-coordiante in the centroid. Next, it does the following:
+where `window_top` specifies that it will only look for the first centroids in the bottom "slice" of the image and  `y` is simply the y-coordiante in the centroid. Here, a region of the pre-processed image is converted to a 1D array by summing each column to a single value. 
     
     ...
     left_sum = np.sum(gray_warped[window_top:, left_min_index:left_max_index], axis=0)
     ...
-Here, a region of the pre-processed image is converted to a 1D array by summing each column to a single value. 
+    
+Next, a convolution is performed between the window signal (defined by the window width) to detect the lane lines. 
     
     ...
     left_signal = np.convolve(window_signal, left_sum)
-    ...
     
-Next, a convolution is performed between the window signal (defined by the window width) to detect the lane lines. 
-
-    ...
     left_x, left_confidence = _compute_signal_center(left_signal, left_min_index, scale_confidence = False)
     ...
 
