@@ -170,12 +170,12 @@ This step performs the actual lane detection, based on the warped grayscale imag
 
 The entire lane detection revolves around centroids. For the purposes of this project, a single centroid is a triplet of floats:
 
-        centroid = (left_x, right_x, y)
+    centroid = (left_x, right_x, y)
 
 This is simply a slightly more compact representation of two separate points: 
 
-        P_left = (left_x, y)
-        P_right = (right_x, y)
+    P_left = (left_x, y)
+    P_right = (right_x, y)
 
 Where `P_left` is a point believed to be a point on the left lane, and `P_right` is a point believed to be a point on the right lane. 
 
@@ -199,13 +199,44 @@ Here, a region of the pre-processed image is converted to a 1D array by summing 
     left_signal = np.convolve(window_signal, left_sum)
     ...
     
-Next, a convolution is performed between the window signal (defined by the window width).
+Next, a convolution is performed between the window signal (defined by the window width) to detect the lane lines. 
 
     ...
     left_x, left_confidence = _compute_signal_center(left_signal, left_min_index, scale_confidence = False)
     ...
 
-and the same for `right_x`.  
+and the same for `right_x`. The `_compute_signal_center()` function computes the signal center which is defined as follows:
+
+    ...
+    center = np.argmax(signal) + offset - (WINDOW_WIDTH / 2)
+    ...
+
+where the offset shifts the center relative to the overall image. There is also an option to scale the confidence (or not), depending upon the use case. If `scale_confidence = False`, `_compute_signal_center()` will simply assign complete confidence to the detected centroid, otherwise it will scale the confidence relative to the expected max possible signal value. 
+
+The first centroid found is then used as a reference by the `_estimate_centroids()` which will loop over the image in layers and perform convolutions to detect more centroids. Inside the `_estimate_centroids()` function, it looks like this:
+
+    ...
+    window_top = int(n_rows - (layer + 1) * WINDOW_HEIGHT)
+    window_bottom = int(n_rows - layer * WINDOW_HEIGHT)
+    y = int(window_bottom - WINDOW_HEIGHT / 2)
+    
+    window_sum = np.sum(gray_warped[window_top:window_bottom, :], axis=0)
+
+    conv_signal = np.convolve(window_signal, window_sum)
+
+    left_x, left_confidence = _compute_window_center(conv_signal, n_cols, prev_left_x)
+    right_x, right_confidence = _compute_window_center(conv_signal, n_cols, prev_right_x)
+    ...
+
+Note that here the confidence is scaled (`scale_confidence = True` by default). The algorithm assumes that `prev_left_x` and `prev_right_x` is never `None` which is why `_estimate_first_centroid()` simply assumes that the first centroid detected is always good. It will then attempt to handle missing values in various ways, which are described in detail in `_estimate_centroids()`, but the end result should always be concrete left, right and y values for all centroid. 
+
+After `_estimate_centroids()` have looped over the image, the algorithm uses a very simply error detection sub-algorithm to attempt to infer any "bad" lane lines. This sub-algorithm is found in `_error.py` and specifically `_infer_lane_error_code()` which returns `0` is the lane is OK. Any other error code is treated as sufficient to discard the lane. In the event that the lane is bad, the LaneDetector uses the centroids from the previous frames instead
+    
+    ...
+    if (lane_error_code != 0) and (len(self.centroids_buffer) > 0):
+        centroids = self.centroids_buffer[-1]
+    ...
+    
 
 
 ### Post-processing
