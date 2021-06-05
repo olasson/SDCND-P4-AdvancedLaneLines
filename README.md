@@ -241,8 +241,30 @@ Next, the centroids are used to fit the lanes to polyomials
     left_fit_scaled, right_fit_scaled = _fit_lanes(centroids, M_PER_PIXELS_Y, M_PER_PIXELS_X)
     ...
 
-where the "scaled" version of the fits are used to compute the curvature and deviation from center in (approximately) real-world units (meters). 
-
-
+where the "scaled" version of the fits are used to compute the curvature and deviation from center in (approximately) real-world units (meters).
 
 ### Post-processing
+
+The starting point for the post-processing is the `left_fit, right_fit` from the previous step, and is relatively straigth forward:
+
+    ...
+    image_tmp = _draw_lanes(image_undistorted, self.n_rows, left_fit, right_fit)
+
+    image_tmp = _unwarp_image(image_tmp, self.src, self.dst, self.n_rows, self.n_cols)
+
+    lane_image = cv2.addWeighted(image_undistorted, 1.0, image_tmp, 1.0, 0.0)
+
+    _draw_text(lane_image, curvature, deviation)
+    ...
+    
+The resulting `lane_image` will look like this (assuming successful detection):
+
+<p align="center">
+    <img width="80%" height="80%" src="https://github.com/olasson/SDCND-T1-P4-AdvancedLaneLines/blob/master/images/result/straight_lines1/step08_lane_image.png">
+</p>
+
+## Video results
+
+## Pipeline discussion
+
+
