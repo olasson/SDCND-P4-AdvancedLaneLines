@@ -23,7 +23,7 @@ ERROR_PREFIX = 'ERROR:main(): '
 # Folder for storing temporary project generated data.
 FOLDER_DATA = './data'
 
-def main():
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description = 'Advanced Lane Lines')
 
@@ -153,13 +153,13 @@ def main():
         print(INFO_PREFIX + 'Deleting ' + FOLDER_DATA + ' and all its contents!')
         rmtree(FOLDER_DATA)
         print(INFO_PREFIX + 'Stopping program here! Remove the --clean flag to continue!')
-        return
+        exit()
 
     # Checks
 
     if flag_show_images and folder_is_empty(path_show_images):
         print(ERROR_PREFIX + '--show_images: The folder: ' + path_show_images + ' is empty!')
-        return
+        exit()
 
 
     # Calibrate
@@ -175,7 +175,7 @@ def main():
 
         if not ret:
             print(ERROR_PREFIX + 'Camera calibration failed!')
-            return
+            exit()
 
         save_calibration_data(path_cam_calibrate_save, mtx, dist)
         print(INFO_PREFIX + 'Calibration data saved in location: ' + path_cam_calibrate_save)
@@ -186,7 +186,7 @@ def main():
     # At this point, both mtx and dist should be loaded, but double check
     if (mtx is None) or (dist is None):
         print(ERROR_PREFIX + 'Camera calibration data is still not loaded properly!')
-        return
+        exit()
 
     # Pipeline on images
 
@@ -263,6 +263,3 @@ def main():
         print(INFO_PREFIX + 'Showing images from folder: ' + path_show_images)
         images, file_names = load_images(path_show_images)
         plot_images(images, file_names, n_max_cols = n_max_cols)
-
-
-main()
